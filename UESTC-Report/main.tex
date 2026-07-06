@@ -1,0 +1,70 @@
+%-- coding: UTF-8 --
+\documentclass[fontset=fandol]{ctexart}
+
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right =3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{minted}
+\usepackage{soul}
+\usepackage[colorlinks, 
+		urlcolor=blue,      % 超链接的颜色
+		citecolor=black,    % 文献引用的颜色
+		linkcolor=black]    % 目录超链接取消红框
+		{hyperref}
+\usepackage[numbers,sort&compress]{natbib}  % 设置引用自动排序
+\newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}    % 设置上标引用
+
+% 特殊格式支持
+\usepackage{pgf}
+
+\usepackage{xeCJK}
+\usepackage{xcolor}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+\linespread{1.5}            % 设置全文行距 1.5 倍
+
+
+\title{课程作业I}
+\author{刘晨阳}
+
+\begin{document}
+
+\makeatletter
+\begin{titlepage}
+	\centering
+	\includegraphics[width=0.2\textwidth]{Title/UESTC-Logo.pdf}\par
+	\vspace{1cm}
+	\includegraphics[width=0.6\textwidth]{Title/UESTC-Name.pdf}\par
+	\vspace{1.5cm}
+	{\kaishu\LARGE 无线自组织网络	\par}
+	\vspace{1.5cm}
+	{\huge\bfseries \@title\par}
+	\vspace{1cm}
+	{\kaishu\large \par}
+	\vspace{1cm}
+	{\fangsong\Large{\@author}\par}
+	\vspace{0.3cm}
+	{\so{\large\texttt{202521081011}}\par}
+	\vspace{0.3cm}
+	{\large\fangsong{计算机科学与技术}\par}
+	\vfill
+% Bottom of the page
+	{\Large \today}
+	\vspace{1.5cm}
+\end{titlepage}
+\makeatother
+\clearpage
+
+\tableofcontents
+%\clearpage
+
+
+\vspace{3cm}
+
+
+
+\end{document}
