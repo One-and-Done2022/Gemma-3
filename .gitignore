@@ -8,4 +8,9 @@ runs/
 outputs/
 tmp/
 
+*.aux
+*.log
+*.out
+*.toc
+
 .DS_Store

@@ -20,6 +20,8 @@ modelscope download --repo-type model google/gemma-3-270m --local-dir models/gem
 
 ## Commands
 
+Run the commands inside the `llm-math` conda environment:
+
 ```bash
 python -m unittest tests/test_reward.py
 python -m student_kit.train_peft --config train_config.yaml
@@ -29,3 +31,10 @@ python -m student_kit.eval_self --base-model models/gemma-3-270m --adapter adapt
 The main deliverables are `adapter/`, `reward.py`, `train_config.yaml`,
 `results.json`, and the UESTC-format report under `UESTC-Report/`.
 
+To rebuild the PDF report, use XeLaTeX with `xeCJK`/`ctex` available:
+
+```bash
+cd UESTC-Report
+xelatex -interaction=nonstopmode -halt-on-error main.tex
+xelatex -interaction=nonstopmode -halt-on-error main.tex
+```

@@ -27,7 +27,7 @@ def set_seed(seed: int) -> None:
 
 def load_model(model_path: str, adapter_path: str | None, device: torch.device, use_bf16: bool):
     dtype = torch.bfloat16 if use_bf16 else torch.float32
-    tokenizer = AutoTokenizer.from_pretrained(adapter_path or model_path, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=dtype)
@@ -164,4 +164,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

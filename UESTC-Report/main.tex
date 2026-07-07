@@ -1,70 +1,250 @@
 %-- coding: UTF-8 --
-\documentclass[fontset=fandol]{ctexart}
+\documentclass[12pt]{article}
 
-\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right =3cm,marginparwidth=1.75cm]{geometry}
-
-% Useful packages
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{makecell}
-\usepackage{float}
-\usepackage{minted}
-\usepackage{soul}
-\usepackage[colorlinks, 
-		urlcolor=blue,      % 超链接的颜色
-		citecolor=black,    % 文献引用的颜色
-		linkcolor=black]    % 目录超链接取消红框
-		{hyperref}
-\usepackage[numbers,sort&compress]{natbib}  % 设置引用自动排序
-\newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}    % 设置上标引用
-
-% 特殊格式支持
-\usepackage{pgf}
-
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=3cm]{geometry}
+\usepackage{fontspec}
 \usepackage{xeCJK}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{hyperref}
 \usepackage{xcolor}
-\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\usepackage{verbatim}
 
-\linespread{1.5}            % 设置全文行距 1.5 倍
+\setmainfont{DejaVu Sans}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+\setCJKmainfont{Droid Sans Fallback}[AutoFakeBold=2]
+\setCJKsansfont{Droid Sans Fallback}[AutoFakeBold=2]
+\setCJKmonofont{Droid Sans Fallback}[AutoFakeBold=2]
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
 
+\hypersetup{
+  colorlinks=true,
+  urlcolor=blue,
+  citecolor=black,
+  linkcolor=black
+}
 
-\title{课程作业I}
+\linespread{1.35}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.35em}
+\renewcommand{\arraystretch}{1.18}
+\renewcommand{\contentsname}{目录}
+
+\title{Gemma 3 270M SVG 徽标 LoRA 微调实验报告}
 \author{刘晨阳}
+\date{2026年7月7日}
 
 \begin{document}
 
 \makeatletter
 \begin{titlepage}
-	\centering
-	\includegraphics[width=0.2\textwidth]{Title/UESTC-Logo.pdf}\par
-	\vspace{1cm}
-	\includegraphics[width=0.6\textwidth]{Title/UESTC-Name.pdf}\par
-	\vspace{1.5cm}
-	{\kaishu\LARGE 无线自组织网络	\par}
-	\vspace{1.5cm}
-	{\huge\bfseries \@title\par}
-	\vspace{1cm}
-	{\kaishu\large \par}
-	\vspace{1cm}
-	{\fangsong\Large{\@author}\par}
-	\vspace{0.3cm}
-	{\so{\large\texttt{202521081011}}\par}
-	\vspace{0.3cm}
-	{\large\fangsong{计算机科学与技术}\par}
-	\vfill
-% Bottom of the page
-	{\Large \today}
-	\vspace{1.5cm}
+  \centering
+  \includegraphics[width=0.2\textwidth]{Title/UESTC-Logo.pdf}\par
+  \vspace{1cm}
+  \includegraphics[width=0.6\textwidth]{Title/UESTC-Name.pdf}\par
+  \vspace{1.5cm}
+  {\Large LLM 数学课程作业 Part B\par}
+  \vspace{1.5cm}
+  {\huge\bfseries \@title\par}
+  \vspace{1cm}
+  {\Large \@author\par}
+  \vspace{0.3cm}
+  {\large\texttt{202521081011}\par}
+  \vspace{0.3cm}
+  {\large 计算机科学与技术\par}
+  \vfill
+  {\Large \@date\par}
+  \vspace{1.5cm}
 \end{titlepage}
 \makeatother
 \clearpage
 
 \tableofcontents
-%\clearpage
+\clearpage
 
+\section{结论}
 
-\vspace{3cm}
+本次实验完成了 Part B 要求的 reward 设计、Gemma 3 270M LoRA 微调和验证集自评。使用自定义 reward 在 \texttt{valid.jsonl} 的 17 条样本上评估，Gemma 3 270M 基座模型的平均 reward 为 0，LoRA 适配器的平均 reward 为 0.358181；有效 XML/SVG 率从 0/17 提升到 7/17。提升主要来自模型学会了输出完整 SVG 结构，而不是语义保真度的显著提升。
 
+\section{Reward 设计}
 
+\texttt{student\_kit/reward.py} 将总分归一到 0 到 1，采用可解释的程序化检查。各分项权重如下：
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{3cm} >{\raggedleft\arraybackslash}p{2cm} p{8.2cm}}
+\hline
+分项 & 权重 & 目的 \\
+\hline
+validity & 0.25 & XML 可解析，根节点为 \texttt{<svg>}，包含 \texttt{xmlns} 和 \texttt{viewBox="0 0 256 256"}，且无额外文本。 \\
+safety & 0.15 & 禁止 \texttt{script/image/foreignObject}、事件属性、外链引用等不安全内容。 \\
+geometry & 0.15 & 坐标大多落在 \texttt{-32..288} 的软范围内，避免极端越界和坍缩。 \\
+structure & 0.15 & SVG primitive 数量和类型多样性合理，避免空壳或无限重复。 \\
+colors & 0.10 & 颜色属性数量、十六进制调色板规模和颜色合法性合理。 \\
+grounding & 0.10 & 检查提示词中的形状词、颜色词和显式 hex 色值是否被覆盖。 \\
+degeneracy & 0.10 & 惩罚过短、过长、重复 path、markdown fence 等退化输出。 \\
+\hline
+\end{longtable}
+
+这个 reward 有意把"有效 SVG"和"安全、可渲染"放在较高权重，因为 Gemma 3 270M 的主要失败模式不是图形不够美观，而是无法稳定输出闭合 SVG。\texttt{grounding} 权重较低，是因为简单关键词覆盖无法可靠衡量视觉语义，只作为弱信号使用。
+
+\section{环境与数据}
+
+\begin{itemize}
+  \item Conda 环境：\texttt{llm-math}
+  \item Python：\texttt{3.11.15}
+  \item GPU：\texttt{NVIDIA GeForce RTX 4090}
+  \item PyTorch：\texttt{2.11.0+cu128}
+  \item Transformers：\texttt{5.13.0}
+  \item PEFT：\texttt{0.19.1}
+  \item 基座模型：ModelScope \texttt{google/gemma-3-270m}
+  \item 数据集：\texttt{roboticcam/logo-detailed-prompt}，commit \texttt{8468c4b}
+\end{itemize}
+
+\section{训练配置}
+
+\begin{itemize}
+  \item 训练脚本：\texttt{student\_kit/train\_peft.py}
+  \item 配置文件：\texttt{train\_config.yaml}
+\end{itemize}
+
+训练时只对 assistant 的 SVG 部分计算 loss，prompt token 使用 \texttt{-100} mask。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{5cm} p{8cm}}
+\hline
+参数 & 值 \\
+\hline
+LoRA rank & 16 \\
+LoRA alpha & 32 \\
+LoRA dropout & 0.05 \\
+target modules &
+\begin{tabular}[t]{@{}l@{}}
+\texttt{q\_proj,k\_proj,v\_proj,o\_proj} \\
+\texttt{gate\_proj,up\_proj,down\_proj}
+\end{tabular} \\
+epochs & 8 \\
+batch size & 1 \\
+gradient accumulation & 8 \\
+learning rate & \texttt{2e-4} \\
+max sequence length & 4096 \\
+dtype & bf16 \\
+\hline
+\end{longtable}
+
+\section{训练过程}
+
+\begin{longtable}{>{\raggedleft\arraybackslash}p{2cm} >{\raggedleft\arraybackslash}p{4cm} >{\raggedleft\arraybackslash}p{4cm}}
+\hline
+Epoch & Train loss & Valid loss \\
+\hline
+1 & 0.946210 & 0.809480 \\
+2 & 0.745076 & 0.735340 \\
+3 & 0.687376 & 0.706011 \\
+4 & 0.652134 & 0.693109 \\
+5 & 0.624803 & 0.679605 \\
+6 & 0.603479 & 0.673426 \\
+7 & 0.585965 & 0.672937 \\
+8 & 0.573578 & 0.673474 \\
+\hline
+\end{longtable}
+
+最佳验证 loss 为 0.6729366008，出现在第 7 个 epoch。最终 \texttt{adapter/} 保存的是验证 loss 最低时的 LoRA 权重。
+
+\section{自评结果}
+
+自评使用 greedy decoding，\texttt{max\_new\_tokens=1536}，随机种子为 42。结果写入 \texttt{results.json}。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.8cm} >{\raggedleft\arraybackslash}p{2.45cm} >{\raggedleft\arraybackslash}p{2.55cm} >{\raggedleft\arraybackslash}p{2cm} >{\raggedleft\arraybackslash}p{2cm}@{}}
+\hline
+模型 & Mean reward & Valid XML rate & Min & Max \\
+\hline
+Gemma 3 270M base & 0.000000 & 0.000000 & 0.000000 & 0.000000 \\
+LoRA & 0.358181 & 0.411765 & 0.000000 & 0.884057 \\
+Delta & +0.358181 & +0.411765 & - & - \\
+\hline
+\end{longtable}
+
+LoRA 的分项均值如下：
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{5cm} >{\raggedleft\arraybackslash}p{4cm}}
+\hline
+分项 & 均值 \\
+\hline
+validity & 0.411765 \\
+safety & 0.411765 \\
+geometry & 0.264562 \\
+structure & 0.411765 \\
+colors & 0.382353 \\
+grounding & 0.237582 \\
+degeneracy & 0.300326 \\
+\hline
+\end{longtable}
+
+\section{样例观察}
+
+基座模型输出经常是占位符式文本，不能被 XML 解析：
+
+\begingroup\footnotesize
+\begin{verbatim}
+<svg ...>...</svg> <path ...>...</path> <circle ...>...</circle>
+\end{verbatim}
+\endgroup
+
+LoRA 的有效样本能生成完整闭合的 SVG。例如验证集第 8 条得分为 0.884057，开头如下：
+
+\begingroup\footnotesize
+\begin{verbatim}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect x="-9999" y="-9999" width="19998" height="19998"
+        fill="#FBF7E3"/>
+  <defs><linearGradient id="ring" ...></linearGradient></defs>
+  <circle cx="128" cy="128" r="104" fill="none" .../>
+  ...
+</svg>
+\end{verbatim}
+\endgroup
+
+但 LoRA 仍有 10 条样本得分为 0。失败样本通常不是完全不会写 SVG，而是在生成后半段进入重复模式，未能在 \texttt{max\_new\_tokens=1536} 内闭合，例如：
+
+\begingroup\footnotesize
+\begin{verbatim}
+<line x1="128" y1="128" x2="128" y2="128"/>
+<line x1="128" y1="128" x2="128" y2="128"/>
+...
+\end{verbatim}
+\endgroup
+
+\section{分析}
+
+本次提升主要来自监督微调让模型学到 SVG 外壳、常见 primitive、颜色属性和部分组合模式。基座模型虽然知道 SVG 相关词汇，但输出多为占位符或重复标签，不能形成可解析文档，因此 reward 为 0。
+
+LoRA 的弱点也很明显：\texttt{grounding} 均值只有 0.237582，说明提示词语义覆盖仍差；无效样本出现明显重复，说明模型学到局部 SVG 模板后缺少稳定的结束控制。这也是 Goodhart 风险：程序化 reward 上升主要来自"闭合、合法、配色合理"，并不保证视觉上符合提示词，更不保证能通过私有 Sonnet 视觉评审。
+
+如果继续改进，优先方向是缩短和清洗训练目标、加入重复惩罚或停止序列调参、扩大有效 SVG 结构样本，并单独分析 prompt grounding，而不是只追求 validation loss。
+
+\section{复现方式}
+
+\begingroup\footnotesize
+\begin{verbatim}
+python -m unittest tests/test_reward.py
+python -m student_kit.train_peft --config train_config.yaml
+python -m student_kit.eval_self --base-model models/gemma-3-270m \
+  --adapter adapter --data data/logo-detailed-prompt/valid.jsonl \
+  --output results.json
+\end{verbatim}
+\endgroup
+
+主要提交物包括：
+
+\begin{itemize}
+  \item \texttt{adapter/adapter\_config.json}
+  \item \texttt{adapter/adapter\_model.safetensors}
+  \item \texttt{reward.py}
+  \item \texttt{student\_kit/reward.py}
+  \item \texttt{train\_config.yaml}
+  \item \texttt{results.json}
+  \item 本报告
+\end{itemize}
 
 \end{document}

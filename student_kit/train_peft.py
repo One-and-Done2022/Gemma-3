@@ -199,7 +199,6 @@ def main() -> None:
         if val_loss < best_val:
             best_val = val_loss
             model.save_pretrained(output_dir)
-            tokenizer.save_pretrained(output_dir)
 
     metadata = {
         "finished_at": datetime.now().isoformat(timespec="seconds"),
@@ -215,4 +214,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
