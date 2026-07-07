@@ -1,4 +1,4 @@
-# Gemma 3 270M SVG 徽标 LoRA 微调报告
+# SVG 徽标生成 LoRA 微调报告
 
 ## 结论
 
@@ -150,4 +150,3 @@ python -m student_kit.eval_self --base-model models/gemma-3-270m --adapter adapt
 - `results.json`
 - `report.md`
 - `UESTC-Report/main.tex`
-
