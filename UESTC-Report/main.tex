@@ -1,14 +1,23 @@
 %-- coding: UTF-8 --
-\documentclass[12pt]{article}
+\documentclass[fontset=none]{ctexart}
 
-\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=3cm]{geometry}
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath}
 \usepackage{fontspec}
-\usepackage{xeCJK}
 \usepackage{graphicx}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{soul}
 \usepackage{array}
 \usepackage{longtable}
-\usepackage{hyperref}
+\usepackage[colorlinks,
+  urlcolor=blue,
+  citecolor=black,
+  linkcolor=black]
+  {hyperref}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{xcolor}
+\usepackage{pgf}
 \usepackage{verbatim}
 
 \setmainfont{DejaVu Sans}
@@ -17,23 +26,24 @@
 \setCJKmainfont{Droid Sans Fallback}[AutoFakeBold=2]
 \setCJKsansfont{Droid Sans Fallback}[AutoFakeBold=2]
 \setCJKmonofont{Droid Sans Fallback}[AutoFakeBold=2]
-\XeTeXlinebreaklocale "zh"
-\XeTeXlinebreakskip = 0pt plus 1pt
+\setCJKfamilyfont{zhsong}{Droid Sans Fallback}[AutoFakeBold=2]
+\setCJKfamilyfont{zhhei}{Droid Sans Fallback}[AutoFakeBold=2]
+\setCJKfamilyfont{zhkai}{Droid Sans Fallback}[AutoFakeBold=2,AutoFakeSlant=0.18]
+\setCJKfamilyfont{zhfs}{Droid Sans Fallback}[AutoFakeBold=2]
+\newcommand{\songti}{\CJKfamily{zhsong}}
+\newcommand{\heiti}{\CJKfamily{zhhei}}
+\newcommand{\kaishu}{\CJKfamily{zhkai}}
+\newcommand{\fangsong}{\CJKfamily{zhfs}}
 
-\hypersetup{
-  colorlinks=true,
-  urlcolor=blue,
-  citecolor=black,
-  linkcolor=black
-}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
 
-\linespread{1.35}
+\linespread{1.5}
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0.35em}
 \renewcommand{\arraystretch}{1.18}
-\renewcommand{\contentsname}{目录}
 
-\title{Gemma 3 270M SVG 徽标 LoRA 微调实验报告}
+\title{课程作业 Part B}
 \author{刘晨阳}
 \date{2026年7月7日}
 
@@ -46,15 +56,17 @@
   \vspace{1cm}
   \includegraphics[width=0.6\textwidth]{Title/UESTC-Name.pdf}\par
   \vspace{1.5cm}
-  {\Large LLM 数学课程作业 Part B\par}
+  {\kaishu\LARGE LLM 数学\par}
   \vspace{1.5cm}
   {\huge\bfseries \@title\par}
+  \vspace{0.8cm}
+  {\kaishu\large Gemma 3 270M SVG 徽标 LoRA 微调实验报告\par}
   \vspace{1cm}
-  {\Large \@author\par}
+  {\fangsong\Large{\@author}\par}
   \vspace{0.3cm}
-  {\large\texttt{202521081011}\par}
+  {\so{\large\texttt{202521081011}}\par}
   \vspace{0.3cm}
-  {\large 计算机科学与技术\par}
+  {\large\fangsong{计算机科学与技术}\par}
   \vfill
   {\Large \@date\par}
   \vspace{1.5cm}
